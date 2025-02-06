@@ -5,14 +5,21 @@ import { HttpExceptionFilter } from './common/exceptions/http.exception.filter';
 import { AllExceptionsFilter } from './common/exceptions/base.exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 使用 winston logger
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
   // 注册全局拦截器
   app.useGlobalInterceptors(new TransformInterceptor());
   // 注册全局异常过滤器
-  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+  app.useGlobalFilters(
+    new AllExceptionsFilter(app.get(WINSTON_MODULE_NEST_PROVIDER)),
+    new HttpExceptionFilter(app.get(WINSTON_MODULE_NEST_PROVIDER)),
+  );
   // 注册全局验证管道
   app.useGlobalPipes(new ValidationPipe());
 

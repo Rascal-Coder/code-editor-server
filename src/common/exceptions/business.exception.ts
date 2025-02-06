@@ -16,7 +16,12 @@ export class BusinessException extends HttpException {
     }
     super(err, HttpStatus.OK);
   }
-
+  static throwTimeout() {
+    throw new BusinessException({
+      code: BUSINESS_ERROR_CODE.TIMEOUT,
+      message: '执行时间超时!',
+    });
+  }
   static throwForbidden() {
     throw new BusinessException({
       code: BUSINESS_ERROR_CODE.ACCESS_FORBIDDEN,

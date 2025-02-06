@@ -1,14 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CodeType } from '@/constants/docker.constant';
-import { run, RunCodeStatus } from './docker';
+import { run } from './docker';
 import { RunCodeResponseDto } from './dto/run-code-response.dto';
-
-interface DockerRunResult {
-  output: string;
-  code: RunCodeStatus;
-  time: number;
-  message: string;
-}
 
 @Injectable()
 export class CodeRunnerService {
@@ -18,7 +11,7 @@ export class CodeRunnerService {
     stdin?: string;
     version?: string;
   }): Promise<RunCodeResponseDto> {
-    const { output } = (await run(params)) as DockerRunResult;
+    const output = (await run(params)) as string;
 
     return { output: output };
   }

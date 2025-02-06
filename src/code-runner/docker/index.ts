@@ -1,18 +1,13 @@
 import Docker, { Container } from 'dockerode';
 import dockerConfig from '@/config/docker';
 import { isType } from '@/utils/helper';
-// import logger from '../logger';
 import {
   CodeEnv,
   CodeType,
   imageMap,
   defaultVersion,
 } from '@/constants/docker.constant';
-export enum RunCodeStatus {
-  success = 0,
-  timeout = 1,
-  error = 2,
-}
+import { BusinessException } from '@/common/exceptions/business.exception';
 
 const DockerRunConfig = {
   timeout: 6000,
@@ -33,15 +28,6 @@ export async function run(params: {
   stdin?: string;
   version?: string;
 }) {
-  const Error = {
-    output: '',
-    code: RunCodeStatus.error,
-    time: 0,
-    message: '',
-  };
-
-  const result = Error;
-
   const { code, type, stdin } = params;
 
   let { version } = params;
@@ -106,8 +92,9 @@ export async function run(params: {
             reject(_err);
           }
           const handleOutput = async () => {
+            let outputString = '';
             try {
-              let outputString = await container?.logs({
+              outputString = await container?.logs({
                 stdout: true,
                 stderr: true,
               });
@@ -121,21 +108,15 @@ export async function run(params: {
               const isRunning = containerInfo.State.Running;
 
               const isTimeout = !!isRunning;
-
               if (isTimeout) {
-                result.code = RunCodeStatus.timeout;
-                result.message = '执行时间超时!';
-              } else {
-                result.code = RunCodeStatus.success;
-                result.output = outputString;
+                BusinessException.throwTimeout();
               }
-
             } catch (error) {
               removeContainer();
               reject(error);
             } finally {
               removeContainer();
-              resolve(result);
+              resolve(outputString);
             }
           };
 

@@ -7,4 +7,6 @@ export const BUSINESS_ERROR_CODE = {
   ACCESS_FORBIDDEN: 10003,
   // 参数错误
   PARAMETER_ERROR: 10004,
+  // 执行时间超时
+  TIMEOUT: 10005,
 };
