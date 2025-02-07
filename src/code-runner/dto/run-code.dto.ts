@@ -13,7 +13,7 @@ export class RunCodeDto {
   @IsNotEmpty()
   code: string;
 
-  @ApiProperty({ description: '标准输入' })
+  @ApiPropertyOptional({ description: '标准输入' })
   @IsString()
   @IsOptional()
   stdin?: string;

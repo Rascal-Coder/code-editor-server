@@ -1,0 +1,179 @@
+version: '3.1'
+networks:
+  code-runner-network:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: qiyuhang
+      MYSQL_USER: user
+      MYSQL_PASSWORD: qiyuhang
+      MYSQL_DATABASE: mydb
+      TZ: Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - C:\mysql_vol:/var/lib/mysql
+    container_name: code-runner-mysql
+    networks:
+      - code-runner-network
+    profiles:
+      - database
+
+  # Node.js 服务组
+  nodejs-16:
+    build:
+      context: ./nodejs/16
+    container_name: code-runner-nodejs-16
+    networks:
+      - code-runner-network
+    profiles:
+      - nodejs
+    image: nodejs:16
+  nodejs-18:
+    build:
+      context: ./nodejs/18
+    container_name: code-runner-nodejs-18
+    networks:
+      - code-runner-network
+    profiles:
+      - nodejs
+    image: nodejs:18
+  nodejs-20:
+    build:
+      context: ./nodejs/20
+    container_name: code-runner-nodejs-20
+    networks:
+      - code-runner-network
+    profiles:
+      - nodejs
+    image: nodejs:20
+  nodejs-22:
+    build:
+      context: ./nodejs/22
+    container_name: code-runner-nodejs-22
+    networks:
+      - code-runner-network
+    profiles:
+      - nodejs
+    image: nodejs:22
+  # Python 服务组
+  python-2:
+    build:
+      context: ./python/2.7.18
+    container_name: code-runner-python-2
+    networks:
+      - code-runner-network
+    profiles:
+      - python
+    image: python:2
+  python-3:
+    build:
+      context: ./python/3.9.18
+    container_name: code-runner-python-3
+    networks:
+      - code-runner-network
+    profiles:
+      - python
+    image: python:3
+  # Java 服务组
+  java-8:
+    build:
+      context: ./java/8
+    container_name: code-runner-java-8
+    networks:
+      - code-runner-network
+    profiles:
+      - java
+    image: java:8
+  java-17:
+    build:
+      context: ./java/17
+    container_name: code-runner-java-17
+    networks:
+      - code-runner-network
+    profiles:
+      - java
+    image: java:17
+  java-20:
+    build:
+      context: ./java/20
+    container_name: code-runner-java-20
+    networks:
+      - code-runner-network
+    profiles:
+      - java
+    image: java:20
+  # Go 服务组
+  go-1:
+    build:
+      context: ./go/1.18
+    container_name: code-runner-go-1
+    networks:
+      - code-runner-network
+    profiles:
+      - go
+    image: go:1
+
+  # C++ 服务组
+  cpp-11:
+    build:
+      context: ./cpp/11.5
+    container_name: code-runner-cpp-11
+    networks:
+      - code-runner-network
+    profiles:
+      - cpp
+    image: cpp:11
+  cpp-14:
+    build:
+      context: ./cpp/14.2
+    container_name: code-runner-cpp-14
+    networks:
+      - code-runner-network
+    profiles:
+      - cpp
+    image: cpp:14
+  # PHP 服务组
+  php-7:
+    build:
+      context: ./php/7.4
+    container_name: code-runner-php-7
+    networks:
+      - code-runner-network
+    profiles:
+      - php
+    image: php:7
+  php-8:
+    build:
+      context: ./php/8.4
+    container_name: code-runner-php-8
+    networks:
+      - code-runner-network
+    profiles:
+      - php
+    image: php:8
+
+  # Rust 服务组
+  rust-1:
+    build:
+      context: ./rust/1.83.0
+    container_name: code-runner-rust-1
+    networks:
+      - code-runner-network
+    profiles:
+      - rust
+    image: rust:1
+
+# docker-compose --profile database up -d
+# docker-compose --profile nodejs up -d
+# docker-compose --profile python up -d
+# docker-compose --profile java up -d
+# docker-compose --profile go up -d
+# docker-compose --profile cpp up -d
+# docker-compose --profile php up -d
+# docker-compose --profile rust up -d

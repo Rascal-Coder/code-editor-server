@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { CodeRunnerService } from './code-runner.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RunCodeDto } from './dto/run-code.dto';
-import { RunCodeResponseDto } from './dto/run-code-response.dto';
+import { RunCodeResponseDto, RunCodeOutput } from './dto/run-code-response.dto';
 
 @ApiTags('code-runner')
 @Controller('code-runner')
@@ -19,7 +19,7 @@ export class CodeRunnerController {
     description: '运行成功',
     type: RunCodeResponseDto,
   })
-  async runCode(@Body() params: RunCodeDto): Promise<RunCodeResponseDto> {
+  async runCode(@Body() params: RunCodeDto): Promise<RunCodeOutput> {
     return await this.codeRunnerService.runCode(params);
   }
 }

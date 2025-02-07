@@ -1,14 +1,11 @@
 import Docker, { Container } from 'dockerode';
 import dockerConfig from '@/config/docker';
-import { isType } from '@/utils/helper';
-import {
-  CodeEnv,
-  CodeType,
-  imageMap,
-  defaultVersion,
-} from '@/constants/docker.constant';
+import { formatDockerOutput } from '@/utils';
+import { CodeEnv, CodeType, defaultVersion } from '@/constants/docker.constant';
 import { BusinessException } from '@/common/exceptions/business.exception';
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 const DockerRunConfig = {
   timeout: 6000,
 };
@@ -44,13 +41,27 @@ export async function run(params: {
     image = `${CodeEnv.nodejs}:18`;
   }
 
-  let dockerOptions = imageMap[image];
-
+  // 从数据库获取配置
+  let dockerOptions = await prisma.codeRunnerConfig.findFirst({
+    where: {
+      language: image,
+    },
+  });
   if (!dockerOptions) {
-    dockerOptions = imageMap[type];
+    // 找不到特定版本的配置，使用通用配置
+    dockerOptions = await prisma.codeRunnerConfig.findFirst({
+      where: {
+        language: type,
+      },
+    });
   }
 
-  const { shellWithStdin, fileSuffix, prefix = '', shell } = dockerOptions;
+  const {
+    shell,
+    shellWithStdin,
+    fileSuffix,
+    prefix = '',
+  } = dockerOptions || {};
 
   let removeContainer = () => {};
 
@@ -80,16 +91,17 @@ export async function run(params: {
         AttachStdout: true,
         NetworkDisabled: true,
       },
-      function (_err, container?: Container) {
-        if (_err) reject(_err);
+      (err: Error, container?: Container) => {
+        if (err)
+          reject(new BusinessException(`Docker execution failed: ${err}`));
         removeContainer = async () => {
           await container?.remove({ force: true });
         };
 
-        container?.start((_err) => {
-          if (_err) {
+        container?.start((err: Error) => {
+          if (err) {
             removeContainer();
-            reject(_err);
+            reject(new BusinessException(`Docker execution failed:${err}`));
           }
           const handleOutput = async () => {
             let outputString = '';
@@ -102,7 +114,7 @@ export async function run(params: {
               if (Buffer.isBuffer(outputString)) {
                 outputString = outputString.toString('utf-8');
               }
-              outputString = formatOutput(outputString);
+              outputString = formatDockerOutput(outputString);
 
               const containerInfo = await container?.inspect();
               const isRunning = containerInfo.State.Running;
@@ -113,7 +125,7 @@ export async function run(params: {
               }
             } catch (error) {
               removeContainer();
-              reject(error);
+              reject(new BusinessException(`Docker execution failed:${error}`));
             } finally {
               removeContainer();
               resolve(outputString);
@@ -139,33 +151,4 @@ export async function run(params: {
       },
     );
   });
-}
-
-function formatOutput(outputString: string): string {
-  if (outputString.length > 8200) {
-    outputString =
-      outputString.slice(0, 4000) +
-      outputString.slice(outputString.length - 4000);
-  }
-
-  if (isType('Object', 'Array')(outputString)) {
-    outputString = JSON.stringify(outputString);
-  }
-
-  if (typeof outputString !== 'string') {
-    outputString = String(outputString);
-  }
-
-  let outputStringArr = outputString.split('%0A');
-
-  if (outputStringArr.length > 200) {
-    outputStringArr = outputStringArr
-      .slice(0, 100)
-      .concat(
-        ['%0A', '...' + encodeURI('数据太多,已折叠'), '%0A'],
-        outputStringArr.slice(outputStringArr.length - 100),
-      );
-  }
-
-  return outputStringArr.join('%0A');
 }

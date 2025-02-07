@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model CodeRunnerConfig {
+  id            Int      @id @default(autoincrement())
+  language      String   @unique // 语言标识，如 'nodejs', 'python:3.9.18'
+  shell         String   // 执行命令
+  shellWithStdin String  // 带输入的执行命令
+  fileSuffix    String   // 文件后缀
+  prefix        String?  @db.Text // 可选的代码前缀
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("code_runner_configs")
+}
+
